@@ -1,4 +1,4 @@
-# Interface for the Factorial service, wasmcloud:example:factorial
+# Interface for the Blobstore interface, auxiliary::interface::blobstore 
 
-This is an interface for a simple service that calculates
-the fatorial of a whole number.
+This interface can be used to support capability providers like local blob storage,
+Amazon S3, Azure blob storage, Google blob storage, etc

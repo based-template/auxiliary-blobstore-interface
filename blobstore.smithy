@@ -1,5 +1,5 @@
 // blobstore.smithy
-// A simple service that calculates the factorial of a whole number
+// A protocol to be used to support capability providers like local blob storage, Amazon S3, Azure blob storeage, ...
 
 
 // Tell the code generator how to reference symbols defined in this namespace
