@@ -90,11 +90,110 @@ pub struct StartDownloadRequest {
     pub context: Option<String>,
 }
 
-/// The Blobstore service has a single method, calculate, which
-/// calculates the factorial of its whole number parameter.
+/// The BlobReceiver interface describes
+/// an actor interface for handling incoming chunks
+/// forwared by a blobstore provider. Chunks may not be received in order
+/// wasmbus.contractId: auxiliary::interfaces::blobstore
+/// wasmbus.actorReceive
+#[async_trait]
+pub trait BlobReceiver {
+    /// returns the capability contract id for this interface
+    fn contract_id() -> &'static str {
+        "auxiliary::interfaces::blobstore"
+    }
+    /// ReceiveChunk - handle a file chunk
+    async fn receive_chunk(&self, ctx: &Context, arg: &FileChunk) -> RpcResult<()>;
+}
+
+/// BlobReceiverReceiver receives messages defined in the BlobReceiver service trait
+/// The BlobReceiver interface describes
+/// an actor interface for handling incoming chunks
+/// forwared by a blobstore provider. Chunks may not be received in order
+#[doc(hidden)]
+#[async_trait]
+pub trait BlobReceiverReceiver: MessageDispatch + BlobReceiver {
+    async fn dispatch(&self, ctx: &Context, message: &Message<'_>) -> RpcResult<Message<'_>> {
+        match message.method {
+            "ReceiveChunk" => {
+                let value: FileChunk = deserialize(message.arg.as_ref())
+                    .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
+                let resp = BlobReceiver::receive_chunk(self, ctx, &value).await?;
+                let buf = Cow::Owned(serialize(&resp)?);
+                Ok(Message {
+                    method: "BlobReceiver.ReceiveChunk",
+                    arg: buf,
+                })
+            }
+            _ => Err(RpcError::MethodNotHandled(format!(
+                "BlobReceiver::{}",
+                message.method
+            ))),
+        }
+    }
+}
+
+/// BlobReceiverSender sends messages to a BlobReceiver service
+/// The BlobReceiver interface describes
+/// an actor interface for handling incoming chunks
+/// forwared by a blobstore provider. Chunks may not be received in order
+/// client for sending BlobReceiver messages
+#[derive(Debug)]
+pub struct BlobReceiverSender<T: Transport> {
+    transport: T,
+}
+
+impl<T: Transport> BlobReceiverSender<T> {
+    /// Constructs a BlobReceiverSender with the specified transport
+    pub fn via(transport: T) -> Self {
+        Self { transport }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<'send> BlobReceiverSender<wasmbus_rpc::provider::ProviderTransport<'send>> {
+    /// Constructs a Sender using an actor's LinkDefinition,
+    /// Uses the provider's HostBridge for rpc
+    pub fn for_actor(ld: &'send wasmbus_rpc::core::LinkDefinition) -> Self {
+        Self {
+            transport: wasmbus_rpc::provider::ProviderTransport::new(ld, None),
+        }
+    }
+}
+#[cfg(target_arch = "wasm32")]
+impl BlobReceiverSender<wasmbus_rpc::actor::prelude::WasmHost> {
+    /// Constructs a client for actor-to-actor messaging
+    /// using the recipient actor's public key
+    pub fn to_actor(actor_id: &str) -> Self {
+        let transport =
+            wasmbus_rpc::actor::prelude::WasmHost::to_actor(actor_id.to_string()).unwrap();
+        Self { transport }
+    }
+}
+#[async_trait]
+impl<T: Transport + std::marker::Sync + std::marker::Send> BlobReceiver for BlobReceiverSender<T> {
+    #[allow(unused)]
+    /// ReceiveChunk - handle a file chunk
+    async fn receive_chunk(&self, ctx: &Context, arg: &FileChunk) -> RpcResult<()> {
+        let arg = serialize(arg)?;
+        let resp = self
+            .transport
+            .send(
+                ctx,
+                Message {
+                    method: "BlobReceiver.ReceiveChunk",
+                    arg: Cow::Borrowed(&arg),
+                },
+                None,
+            )
+            .await?;
+        Ok(())
+    }
+}
+
+/// The Blobstore interface describes a service that can
+/// store and retrieve blobs
 /// wasmbus.contractId: auxiliary::interfaces::blobstore
 /// wasmbus.providerReceive
-/// wasmbus.actorReceive
 #[async_trait]
 pub trait Blobstore {
     /// returns the capability contract id for this interface
@@ -144,8 +243,8 @@ pub trait Blobstore {
 }
 
 /// BlobstoreReceiver receives messages defined in the Blobstore service trait
-/// The Blobstore service has a single method, calculate, which
-/// calculates the factorial of its whole number parameter.
+/// The Blobstore interface describes a service that can
+/// store and retrieve blobs
 #[doc(hidden)]
 #[async_trait]
 pub trait BlobstoreReceiver: MessageDispatch + Blobstore {
@@ -240,8 +339,8 @@ pub trait BlobstoreReceiver: MessageDispatch + Blobstore {
 }
 
 /// BlobstoreSender sends messages to a Blobstore service
-/// The Blobstore service has a single method, calculate, which
-/// calculates the factorial of its whole number parameter.
+/// The Blobstore interface describes a service that can
+/// store and retrieve blobs
 /// client for sending Blobstore messages
 #[derive(Debug)]
 pub struct BlobstoreSender<T: Transport> {
@@ -251,27 +350,6 @@ pub struct BlobstoreSender<T: Transport> {
 impl<T: Transport> BlobstoreSender<T> {
     /// Constructs a BlobstoreSender with the specified transport
     pub fn via(transport: T) -> Self {
-        Self { transport }
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<'send> BlobstoreSender<wasmbus_rpc::provider::ProviderTransport<'send>> {
-    /// Constructs a Sender using an actor's LinkDefinition,
-    /// Uses the provider's HostBridge for rpc
-    pub fn for_actor(ld: &'send wasmbus_rpc::core::LinkDefinition) -> Self {
-        Self {
-            transport: wasmbus_rpc::provider::ProviderTransport::new(ld, None),
-        }
-    }
-}
-#[cfg(target_arch = "wasm32")]
-impl BlobstoreSender<wasmbus_rpc::actor::prelude::WasmHost> {
-    /// Constructs a client for actor-to-actor messaging
-    /// using the recipient actor's public key
-    pub fn to_actor(actor_id: &str) -> Self {
-        let transport =
-            wasmbus_rpc::actor::prelude::WasmHost::to_actor(actor_id.to_string()).unwrap();
         Self { transport }
     }
 }

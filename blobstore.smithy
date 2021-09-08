@@ -11,16 +11,32 @@ use org.wasmcloud.model#wasmbus
 use org.wasmcloud.model#U32
 use org.wasmcloud.model#U64
 
-/// The Blobstore service has a single method, calculate, which
-/// calculates the factorial of its whole number parameter.
+/// The Blobstore interface describes a service that can
+/// store and retrieve blobs
 @wasmbus(
     contractId: "auxiliary::interfaces::blobstore",
-    actorReceive: true,
     providerReceive: true )
 service Blobstore {
   version: "0.1",
   operations: [ CreateContainer, RemoveContainer, RemoveObject, ListObjects, UploadChunk, StartDownload, StartUpload, GetObjectInfo ]
 }
+
+/// The BlobReceiver interface describes
+/// an actor interface for handling incoming chunks
+/// forwared by a blobstore provider. Chunks may not be received in order
+@wasmbus(
+    contractId: "auxiliary::interfaces::blobstore",
+    actorReceive: true )
+service BlobReceiver {
+  version: "0.1",
+  operations: [ ReceiveChunk ]
+}
+
+/// ReceiveChunk - handle a file chunk
+operation ReceiveChunk {
+    input: FileChunk
+}
+
 
 /// CreateContainer(id: string): Container
 operation CreateContainer {
