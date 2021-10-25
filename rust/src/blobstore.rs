@@ -1,14 +1,10 @@
-// This file is generated automatically using wasmcloud-weld and smithy model definitions
+// This file is generated automatically using wasmcloud/weld-codegen and smithy model definitions
 //
 
-#![allow(clippy::ptr_arg)]
-#[allow(unused_imports)]
+#![allow(unused_imports, clippy::ptr_arg, clippy::needless_lifetimes)]
 use async_trait::async_trait;
-#[allow(unused_imports)]
 use serde::{Deserialize, Serialize};
-#[allow(unused_imports)]
-use std::{borrow::Cow, string::ToString};
-#[allow(unused_imports)]
+use std::{borrow::Cow, io::Write, string::ToString};
 use wasmbus_rpc::{
     deserialize, serialize, Context, Message, MessageDispatch, RpcError, RpcResult, SendOpts,
     Timestamp, Transport,
@@ -117,11 +113,11 @@ pub trait BlobReceiverReceiver: MessageDispatch + BlobReceiver {
             "ReceiveChunk" => {
                 let value: FileChunk = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
-                let resp = BlobReceiver::receive_chunk(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let _resp = BlobReceiver::receive_chunk(self, ctx, &value).await?;
+                let buf = Vec::new();
                 Ok(Message {
                     method: "BlobReceiver.ReceiveChunk",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             _ => Err(RpcError::MethodNotHandled(format!(
@@ -146,6 +142,10 @@ impl<T: Transport> BlobReceiverSender<T> {
     /// Constructs a BlobReceiverSender with the specified transport
     pub fn via(transport: T) -> Self {
         Self { transport }
+    }
+
+    pub fn set_timeout(&self, interval: std::time::Duration) {
+        self.transport.set_timeout(interval);
     }
 }
 
@@ -174,14 +174,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> BlobReceiver for Blob
     #[allow(unused)]
     /// ReceiveChunk - handle a file chunk
     async fn receive_chunk(&self, ctx: &Context, arg: &FileChunk) -> RpcResult<()> {
-        let arg = serialize(arg)?;
+        let buf = serialize(arg)?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "BlobReceiver.ReceiveChunk",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -254,80 +254,80 @@ pub trait BlobstoreReceiver: MessageDispatch + Blobstore {
                 let value: String = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::create_container(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.CreateContainer",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "RemoveContainer" => {
                 let value: String = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::remove_container(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.RemoveContainer",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "RemoveObject" => {
                 let value: RemoveObjectRequest = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::remove_object(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.RemoveObject",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "ListObjects" => {
                 let value: String = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::list_objects(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.ListObjects",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "UploadChunk" => {
                 let value: FileChunk = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::upload_chunk(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.UploadChunk",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "StartDownload" => {
                 let value: StartDownloadRequest = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::start_download(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.StartDownload",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "StartUpload" => {
                 let value: FileChunk = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::start_upload(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.StartUpload",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             "GetObjectInfo" => {
                 let value: GetObjectInfoRequest = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
                 let resp = Blobstore::get_object_info(self, ctx, &value).await?;
-                let buf = Cow::Owned(serialize(&resp)?);
+                let buf = serialize(&resp)?;
                 Ok(Message {
                     method: "Blobstore.GetObjectInfo",
-                    arg: buf,
+                    arg: Cow::Owned(buf),
                 })
             }
             _ => Err(RpcError::MethodNotHandled(format!(
@@ -351,6 +351,10 @@ impl<T: Transport> BlobstoreSender<T> {
     /// Constructs a BlobstoreSender with the specified transport
     pub fn via(transport: T) -> Self {
         Self { transport }
+    }
+
+    pub fn set_timeout(&self, interval: std::time::Duration) {
+        self.transport.set_timeout(interval);
     }
 }
 
@@ -386,14 +390,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
         ctx: &Context,
         arg: &TS,
     ) -> RpcResult<Container> {
-        let arg = serialize(&arg.to_string())?;
+        let buf = serialize(&arg.to_string())?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.CreateContainer",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -409,14 +413,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
         ctx: &Context,
         arg: &TS,
     ) -> RpcResult<BlobstoreResult> {
-        let arg = serialize(&arg.to_string())?;
+        let buf = serialize(&arg.to_string())?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.RemoveContainer",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -432,14 +436,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
         ctx: &Context,
         arg: &RemoveObjectRequest,
     ) -> RpcResult<BlobstoreResult> {
-        let arg = serialize(arg)?;
+        let buf = serialize(arg)?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.RemoveObject",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -455,14 +459,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
         ctx: &Context,
         arg: &TS,
     ) -> RpcResult<BlobList> {
-        let arg = serialize(&arg.to_string())?;
+        let buf = serialize(&arg.to_string())?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.ListObjects",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -474,14 +478,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
     #[allow(unused)]
     /// UploadChunk(chunk: FileChunk): BlobstoreResult
     async fn upload_chunk(&self, ctx: &Context, arg: &FileChunk) -> RpcResult<BlobstoreResult> {
-        let arg = serialize(arg)?;
+        let buf = serialize(arg)?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.UploadChunk",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -497,14 +501,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
         ctx: &Context,
         arg: &StartDownloadRequest,
     ) -> RpcResult<BlobstoreResult> {
-        let arg = serialize(arg)?;
+        let buf = serialize(arg)?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.StartDownload",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -516,14 +520,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
     #[allow(unused)]
     /// StartUpload(chunk: FileChunk): BlobstoreResult
     async fn start_upload(&self, ctx: &Context, arg: &FileChunk) -> RpcResult<BlobstoreResult> {
-        let arg = serialize(arg)?;
+        let buf = serialize(arg)?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.StartUpload",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
@@ -539,14 +543,14 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Blobstore for Blobsto
         ctx: &Context,
         arg: &GetObjectInfoRequest,
     ) -> RpcResult<FileBlob> {
-        let arg = serialize(arg)?;
+        let buf = serialize(arg)?;
         let resp = self
             .transport
             .send(
                 ctx,
                 Message {
                     method: "Blobstore.GetObjectInfo",
-                    arg: Cow::Borrowed(&arg),
+                    arg: Cow::Borrowed(&buf),
                 },
                 None,
             )
