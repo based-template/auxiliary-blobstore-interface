@@ -113,11 +113,11 @@ pub trait BlobReceiverReceiver: MessageDispatch + BlobReceiver {
             "ReceiveChunk" => {
                 let value: FileChunk = deserialize(message.arg.as_ref())
                     .map_err(|e| RpcError::Deser(format!("message '{}': {}", message.method, e)))?;
-                let _resp = BlobReceiver::receive_chunk(self, ctx, &value).await?;
-                let buf = Vec::new();
+                let resp = BlobReceiver::receive_chunk(self, ctx, &value).await?;
+                let buf = Cow::Owned(serialize(&resp)?);
                 Ok(Message {
                     method: "BlobReceiver.ReceiveChunk",
-                    arg: Cow::Owned(buf),
+                    arg: buf,
                 })
             }
             _ => Err(RpcError::MethodNotHandled(format!(
