@@ -16,11 +16,11 @@ pub type BlobList = Vec<FileBlob>;
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct BlobstoreResult {
+    #[serde(default)]
+    pub success: bool,
     /// optional error message
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
-    #[serde(default)]
-    pub success: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -31,57 +31,56 @@ pub struct Container {
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct FileBlob {
-    #[serde(rename = "byteSize")]
-    pub byte_size: u64,
-    pub container: Container,
     #[serde(default)]
     pub id: String,
+    pub container: Container,
+    #[serde(rename = "byteSize")]
+    pub byte_size: u64,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct FileChunk {
+    #[serde(rename = "sequenceNo")]
+    pub sequence_no: u64,
+    pub container: Container,
+    #[serde(default)]
+    pub id: String,
+    #[serde(rename = "totalBytes")]
+    pub total_bytes: u64,
+    #[serde(rename = "chunkSize")]
+    pub chunk_size: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context: Option<String>,
     #[serde(rename = "chunkBytes")]
     #[serde(with = "serde_bytes")]
     #[serde(default)]
     pub chunk_bytes: Vec<u8>,
-    #[serde(rename = "chunkSize")]
-    pub chunk_size: u64,
-    pub container: Container,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub context: Option<String>,
-    #[serde(default)]
-    pub id: String,
-    #[serde(rename = "sequenceNo")]
-    pub sequence_no: u64,
-    #[serde(rename = "totalBytes")]
-    pub total_bytes: u64,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct GetObjectInfoRequest {
-    #[serde(rename = "Container_id")]
-    #[serde(default)]
-    pub container_id: String,
     #[serde(default)]
     pub blob_id: String,
+    #[serde(default)]
+    pub container_id: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RemoveObjectRequest {
+    #[serde(default)]
+    pub id: String,
     #[serde(rename = "Container_id")]
     #[serde(default)]
     pub container_id: String,
-    #[serde(default)]
-    pub id: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StartDownloadRequest {
     #[serde(default)]
     pub blob_id: String,
-    pub chunk_size: u64,
     #[serde(default)]
     pub container_id: String,
+    pub chunk_size: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub context: Option<String>,
 }

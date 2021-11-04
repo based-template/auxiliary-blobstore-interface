@@ -8,6 +8,7 @@ metadata package = [ { namespace: "org.auxiliary.interfaces.blobstore", crate: "
 namespace org.auxiliary.interfaces.blobstore
 
 use org.wasmcloud.model#wasmbus
+use org.wasmcloud.model#n
 use org.wasmcloud.model#U32
 use org.wasmcloud.model#U64
 
@@ -46,6 +47,7 @@ operation CreateContainer {
 
 structure Container {
     @required
+    @n(0)
     id: String,
 }
 
@@ -57,9 +59,11 @@ operation RemoveContainer {
 
 structure BlobstoreResult {
     @required
+    @n(0)
     success: Boolean,
 
     /// optional error message
+    @n(1)
     error: String,
 }
 
@@ -71,9 +75,11 @@ operation RemoveObject {
 
 structure RemoveObjectRequest {
     @required
+    @n(0)
     id: String,
 
     @required
+    @n(1)
     Container_id: String,
 }
 
@@ -85,12 +91,15 @@ operation ListObjects {
 
 structure FileBlob {
     @required
+    @n(0)
     id: String,
 
     @required
+    @n(1)
     container: Container,
 
     @required
+    @n(2)
     byteSize: U64,
 }
 
@@ -106,23 +115,30 @@ operation UploadChunk {
 
 structure FileChunk {
     @required
+    @n(0)
     sequenceNo: U64,
 
     @required
+    @n(1)
     container: Container,
 
     @required
+    @n(2)
     id: String,
 
     @required
+    @n(3)
     totalBytes: U64,
 
     @required
+    @n(4)
     chunkSize: U64,
 
+    @n(5)
     context: String,
 
     @required
+    @n(6)
     chunkBytes: Blob,
 }
 
@@ -134,14 +150,18 @@ operation StartDownload {
 
 structure StartDownloadRequest {
     @required
+    @n(0)
     blob_id: String,
 
     @required
+    @n(1)
     container_id: String,
 
     @required
+    @n(2)
     chunk_size: U64,
 
+    @n(3)
     context: String,
 }
 
@@ -159,8 +179,10 @@ operation GetObjectInfo {
 
 structure GetObjectInfoRequest {
     @required
+    @n(0)
     blob_id: String,
 
     @required
-    Container_id: String,
+    @n(1)
+    container_id: String,
 }
