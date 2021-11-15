@@ -18,7 +18,7 @@ use org.wasmcloud.model#U64
     contractId: "auxiliary::interfaces::blobstore",
     providerReceive: true )
 service Blobstore {
-  version: "0.1",
+  version: "0.2",
   operations: [ CreateContainer, RemoveContainer, RemoveObject, ListObjects, UploadChunk, StartDownload, StartUpload, GetObjectInfo ]
 }
 
@@ -163,6 +163,9 @@ structure StartDownloadRequest {
 
     @n(3)
     context: String,
+
+    @n(4)
+    start_idx: U64,
 }
 
 /// StartUpload(chunk: FileChunk): BlobstoreResult

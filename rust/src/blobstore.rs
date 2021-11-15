@@ -83,6 +83,8 @@ pub struct StartDownloadRequest {
     pub chunk_size: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub context: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start_idx: Option<u64>,
 }
 
 /// The Blobstore interface describes a service that can

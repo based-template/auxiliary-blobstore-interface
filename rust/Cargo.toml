@@ -1,6 +1,6 @@
 [package]
 name = "blobstore-interface"
-version = "0.1.0"
+version = "0.2.0"
 description = "Interface library for the blobstore-interface blobstore capability, "
 authors = [ "dev@example.com" ]
 edition = "2018"
